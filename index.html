@@ -2,10 +2,474 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DuckDuckGo — Privacy, simplified</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DoShibu Browser — Private Search & AI</title>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #222222;
+      --muted: #888888;
+      --nav-link: #555555;
+      --surface: #ffffff;
+      --border: #dedede;
+      --border-focus: #bbbbbb;
+      --switch-bg: #f3f3f3;
+      --active-tab: #ffffff;
+      --dropdown-hover: #f5f5f5;
+      --shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
+      --shadow-focus: 0 5px 20px rgba(0, 0, 0, 0.09);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+
+    body.dark {
+      --bg: #18181b;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --nav-link: #d4d4d8;
+      --surface: #27272a;
+      --border: #3f3f46;
+      --border-focus: #52525b;
+      --switch-bg: #18181b;
+      --active-tab: #3f3f46;
+      --dropdown-hover: #3f3f46;
+      --shadow: 0 3px 14px rgba(0, 0, 0, 0.3);
+      --shadow-focus: 0 5px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* Top Navigation & Dropdown */
+    .top-nav {
+      position: absolute;
+      top: 20px;
+      right: 26px;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      z-index: 10;
+    }
+
+    .top-nav > a {
+      color: var(--nav-link);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .top-nav > a:hover { color: #de5833; }
+
+    .menu-wrapper {
+      position: relative;
+    }
+
+    .menu-button {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--nav-link);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .menu-button:hover {
+      border-color: var(--border-focus);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 46px;
+      right: 0;
+      width: 210px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: var(--shadow-focus);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dropdown-menu[hidden] {
+      display: none;
+    }
+
+    .dropdown-menu button,
+    .dropdown-menu a {
+      width: 100%;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 13.5px;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dropdown-menu button:hover,
+    .dropdown-menu a:hover {
+      background: var(--dropdown-hover);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 6px;
+    }
+
+    /* Main Content */
+    main {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 21vh 20px 50px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      color: #de5833;
+      font-size: clamp(32px, 7vw, 44px);
+      font-weight: 700;
+      letter-spacing: -1.5px;
+    }
+
+    .logo-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #de5833;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(222, 88, 51, 0.28);
+    }
+
+    /* Search Box */
+    .search-box {
+      width: min(100%, 660px);
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 7px 6px 19px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: var(--shadow-focus);
+    }
+
+    .search-icon {
+      color: var(--muted);
+      font-size: 20px;
+      user-select: none;
+    }
+
+    .search-box input {
+      flex: 1;
+      min-width: 50px;
+      height: 42px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 16px;
+    }
+
+    .search-box input::placeholder { color: var(--muted); }
+
+    /* Hide native browser clear button so our custom one looks consistent */
+    .search-box input::-webkit-search-cancel-button {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .clear-btn {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clear-btn:hover {
+      background: var(--dropdown-hover);
+      color: var(--text);
+    }
+
+    .clear-btn[hidden] {
+      display: none;
+    }
+
+    .mode-switch {
+      display: flex;
+      flex-shrink: 0;
+      gap: 3px;
+      padding: 4px;
+      border-radius: 13px;
+      background: var(--switch-bg);
+    }
+
+    .mode-switch button {
+      min-height: 36px;
+      padding: 0 13px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--nav-link);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    .mode-switch button.active {
+      background: var(--active-tab);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .mode-switch button.ai.active {
+      color: #de5833;
+    }
+
+    .hint {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    kbd {
+      padding: 2px 6px;
+      font-size: 11px;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--nav-link);
+    }
+
+    @media (max-width: 520px) {
+      main { padding-top: 19vh; }
+
+      .top-nav {
+        top: 14px;
+        right: 15px;
+        gap: 14px;
+      }
+
+      .logo-badge {
+        width: 40px;
+        height: 40px;
+      }
+
+      .search-box {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+        border-radius: 16px;
+      }
+
+      .search-box input { font-size: 15px; }
+
+      .mode-switch { margin-left: auto; }
+
+      .mode-switch button {
+        padding: 0 10px;
+        font-size: 12px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <script src="script.js"></script>
-</body>
-</html>
+  <nav class="top-nav" aria-label="Site navigation">
+    <a href="https://duckduckgo.com" target="_blank" rel="noopener">About</a>
+    <a href="https://duckduckgo.com" target="_blank" rel="noopener">App</a>
+
+    <div class="menu-wrapper">
+      <button class="menu-button" id="menuButton" aria-label="Menu" aria-expanded="false">☰</button>
+
+      <div class="dropdown-menu" id="dropdownMenu" hidden>
+        <button type="button" id="themeToggle">
+          <span>Dark Mode</span>
+          <span id="themeIcon">🌙</span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <a href="https://duckduckgo.com" target="_blank" rel="noopener">Search Settings</a>
+        <a href="https://duckduckgo.com" target="_blank" rel="noopener">!Bang Shortcuts</a>
+        <a href="https://chatgpt.com" target="_blank" rel="noopener">Open ChatGPT</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="brand">
+      <div class="logo-badge" aria-hidden="true">
+        <!-- Custom Shiba Inu SVG Icon -->
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M5 3L3 9.5C3 14.5 6.8 19 12 19C17.2 19 21 14.5 21 9.5L19 3L15.2 6.2C14.2 5.8 13.1 5.6 12 5.6C10.9 5.6 9.8 5.8 8.8 6.2L5 3Z" fill="#FFFFFF"/>
+          <path d="M7.5 13.5C7.5 11.8 9.5 11 12 11C14.5 11 16.5 11.8 16.5 13.5C16.5 16.2 14.5 18.5 12 18.5C9.5 18.5 7.5 16.2 7.5 13.5Z" fill="#FDE68A"/>
+          <circle cx="9" cy="10.2" r="1.1" fill="#222222"/>
+          <circle cx="15" cy="10.2" r="1.1" fill="#222222"/>
+          <ellipse cx="12" cy="13.2" rx="1.4" ry="1" fill="#222222"/>
+          <path d="M10.5 15.2C11.2 15.9 12.8 15.9 13.5 15.2" stroke="#222222" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span>DoShibu Browser</span>
+    </div>
+
+    <form class="search-box" id="searchForm">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+
+      <input
+        id="query"
+        type="search"
+        placeholder="Search the web"
+        aria-label="Search or ask a question"
+        autocomplete="off"
+      >
+
+      <button type="button" class="clear-btn" id="clearBtn" aria-label="Clear search" hidden>✕</button>
+
+      <div class="mode-switch" aria-label="Choose search mode">
+        <button class="active" type="button" id="searchMode">Search</button>
+        <button class="ai" type="button" id="aiMode">✦ Ask AI</button>
+      </div>
+    </form>
+
+    <p class="hint" id="hint">
+      Private search, less tracking. Press <kbd>/</kbd> to search or <kbd>Alt</kbd>+<kbd>A</kbd> to switch modes.
+    </p>
+  </main>
+
+  <script>
+    const form = document.getElementById("searchForm");
+    const input = document.getElementById("query");
+    const clearBtn = document.getElementById("clearBtn");
+    const searchMode = document.getElementById("searchMode");
+    const aiMode = document.getElementById("aiMode");
+    const hint = document.getElementById("hint");
+    const menuButton = document.getElementById("menuButton");
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+let mode = "search";
+// 1. Mode Switcher (Search vs Ask AI)
+function setMode(newMode) {
+mode = newMode;
+searchMode.classList.toggle("active", mode === "search");
+aiMode.classList.toggle("active", mode === "ai");
+input.placeholder = mode === "ai"
+? "Ask anything..."
+: "Search the web";
+hint.innerHTML = mode === "ai"
+? 'Ask AI in ChatGPT. Press Alt+A for web search.'
+: 'Private search, less tracking. Press / to search or Alt+A to switch modes.';
+input.focus();
+}
+searchMode.addEventListener("click", () => setMode("search"));
+aiMode.addEventListener("click", () => setMode("ai"));
+// 2. Clear Button Visibility & Action
+input.addEventListener("input", () => {
+clearBtn.hidden = input.value.length === 0;
+});
+clearBtn.addEventListener("click", () => {
+input.value = "";
+clearBtn.hidden = true;
+input.focus();
+});
+// 3. Dropdown Menu Toggle & Outside Click Close
+menuButton.addEventListener("click", (e) => {
+e.stopPropagation();
+const isHidden = dropdownMenu.hidden;
+dropdownMenu.hidden = !isHidden;
+menuButton.setAttribute("aria-expanded", String(isHidden));
+});
+document.addEventListener("click", (e) => {
+if (!dropdownMenu.contains(e.target) && e.target !== menuButton) {
+dropdownMenu.hidden = true;
+menuButton.setAttribute("aria-expanded", "false");
+}
+});
+// 4. Dark Mode Toggle (Saved in localStorage)
+function applyTheme(isDark) {
+document.body.classList.toggle("dark", isDark);
+themeIcon.textContent = isDark ? "☀️" : "🌙";
+themeToggle.firstElementChild.textContent = isDark ? "Light Mode" : "Dark Mode";
+}
+const savedTheme = localStorage.getItem("doshibu-theme");
+const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+applyTheme(savedTheme ? savedTheme === "dark" : prefersDark);
+themeToggle.addEventListener("click", () => {
+const isDark = !document.body.classList.contains("dark");
+applyTheme(isDark);
+localStorage.setItem("doshibu-theme", isDark ? "dark" : "light");
+});
+// 5. Keyboard Shortcuts ('/' to focus, 'Alt + A' to toggle AI, 'Escape' to close menu)
+document.addEventListener("keydown", (e) => {
+if (e.key === "/" && document.activeElement !== input) {
+e.preventDefault();
+input.focus();
+} else if (e.altKey && e.key.toLowerCase() === "a") {
+e.preventDefault();
+setMode(mode === "search" ? "ai" : "search");
+} else if (e.key === "Escape") {
+dropdownMenu.hidden = true;
+menuButton.setAttribute("aria-expanded", "false");
+}
+});
+// 6. Form Submission
+form.addEventListener("submit", (event) => {
+event.preventDefault();
+const query = input.value.trim();
+if (!query) {
+input.focus();
+return;
+}
+if (mode === "ai") {
+window.location.href =
+"chatgpt.com" + encodeURIComponent(query);
+} else {
+window.location.href =
+"duckduckgo.com" + encodeURIComponent(query);
+}
+});
