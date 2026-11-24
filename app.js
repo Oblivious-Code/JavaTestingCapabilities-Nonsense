@@ -1,4 +1,4 @@
-// 1. Apply global page styles via JS
+
 Object.assign(document.body.style, {
   margin: "0",
   padding: "0",
